@@ -50,3 +50,13 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+
+# Claude
+.claude/
+CLAUDE.local.md
+
+# Codex
+.codex/
+AGENTS.local.md
+
+.DS_Store
