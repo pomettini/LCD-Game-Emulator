@@ -17,44 +17,44 @@
 #define RMASK_DIRECT -1
 
 /* SM510 */
-void sm510_device_start();
-void sm510_device_reset();
-void sm510_execute_run();
-bool sm510_wake_me_up();
-void sm510_update_segments_state();
-void sm510_reset_vector();
-void sm510_wakeup_vector(); // after halt
+void sm510_device_start(void);
+void sm510_device_reset(void);
+void sm510_execute_run(void);
+bool sm510_wake_me_up(void);
+void sm510_update_segments_state(void);
+void sm510_reset_vector(void);
+void sm510_wakeup_vector(void); // after halt
 
 
 /* SM511 variation */
-void sm511_device_reset();
-void sm511_execute_run();
+void sm511_device_reset(void);
+void sm511_execute_run(void);
 bool sm511_init_melody(un8 *gw_melody);
 
 /*misc internal helpers for SM5XX microcomputer family */
-void pop_stack();
-void push_stack();
+void pop_stack(void);
+void push_stack(void);
 void do_branch(u8 pu, u8 pm, u8 pl);
 u8 bitmask(u16 param);
-void increment_pc();
-void update_w_latch();
-extern u8 ram_r();
+void increment_pc(void);
+void update_w_latch(void);
+extern u8 ram_r(void);
 extern void ram_w(u8 data);
 
 /*
-I/O 
+I/O
 inputs  : K, B, BA
 outputs :  S & R
-*/ 
-extern un8 m_read_k();
+*/
+extern un8 m_read_k(void);
 
-extern un8 m_read_ba();
+extern un8 m_read_ba(void);
 
-extern un8 m_read_b(); 
+extern un8 m_read_b(void);
 
-extern void m_write_s(un8); 
+extern void m_write_s(un8);
 
-extern void m_write_r(un8); 
+extern void m_write_r(un8);
 
 un8 read_byte_program(un16 rom_address);
 un8 readb(un8 ram_address);
@@ -120,7 +120,7 @@ extern 	u8 m_o_state[9];    // W latch
 extern 	u8 m_cn;
 extern 	u8 m_mx;
 extern 	u8 trs_field;
-	 
+
 extern 	u8 m_cb;
 extern 	u8 m_s;
 extern 	bool m_rsub;
@@ -134,65 +134,65 @@ extern 	bool m_rsub;
 extern u8 flag_lcd_deflicker_level;
 
 // opcode handlers used by all CPUs
-void sm510_op_lbl();
-void sm510_op_lb();
-void sm510_op_sbl();
-void sm510_op_sbm();
-void sm510_op_exbla();
-void sm510_op_incb();
-void sm510_op_decb();
-void sm510_op_atpl();
-void sm510_op_rtn0();
-void sm510_op_rtn1();
-void sm510_op_tl();
-void sm510_op_tml();
-void sm510_op_tm();
-void sm510_op_t();
-void sm510_op_exc();
-void sm510_op_bdc();
-void sm510_op_exci();
-void sm510_op_excd();
-void sm510_op_lda();
-void sm510_op_lax();
-void sm510_op_ptw();
-void sm510_op_wr();
-void sm510_op_ws();
-void sm510_op_kta();
-void sm510_op_atbp();
-void sm510_op_atx();
-void sm510_op_atl();
-void sm510_op_atfc();
-void sm510_op_atr();
-void sm510_op_add();
-void sm510_op_add11();
-void sm510_op_adx();
-void sm510_op_coma();
-void sm510_op_rot();
-void sm510_op_rc();
-void sm510_op_sc();
-void sm510_op_tb();
-void sm510_op_tc();
-void sm510_op_tam();
-void sm510_op_tmi();
-void sm510_op_ta0();
-void sm510_op_tabl();
-void sm510_op_tis();
-void sm510_op_tal();
-void sm510_op_tf1();
-void sm510_op_tf4();
-void sm510_op_rm();
-void sm510_op_sm();
-void sm510_op_pre();
-void sm510_op_sme();
-void sm510_op_rme();
-void sm510_op_tmel();
-void sm510_op_skip();
-void sm510_op_cend();
-void sm510_op_idiv();
-void sm510_op_dr();
-void sm510_op_dta();
-void sm510_op_clklo();
-void sm510_op_clkhi();
-void sm510_op_illegal();
+void sm510_op_lbl(void);
+void sm510_op_lb(void);
+void sm510_op_sbl(void);
+void sm510_op_sbm(void);
+void sm510_op_exbla(void);
+void sm510_op_incb(void);
+void sm510_op_decb(void);
+void sm510_op_atpl(void);
+void sm510_op_rtn0(void);
+void sm510_op_rtn1(void);
+void sm510_op_tl(void);
+void sm510_op_tml(void);
+void sm510_op_tm(void);
+void sm510_op_t(void);
+void sm510_op_exc(void);
+void sm510_op_bdc(void);
+void sm510_op_exci(void);
+void sm510_op_excd(void);
+void sm510_op_lda(void);
+void sm510_op_lax(void);
+void sm510_op_ptw(void);
+void sm510_op_wr(void);
+void sm510_op_ws(void);
+void sm510_op_kta(void);
+void sm510_op_atbp(void);
+void sm510_op_atx(void);
+void sm510_op_atl(void);
+void sm510_op_atfc(void);
+void sm510_op_atr(void);
+void sm510_op_add(void);
+void sm510_op_add11(void);
+void sm510_op_adx(void);
+void sm510_op_coma(void);
+void sm510_op_rot(void);
+void sm510_op_rc(void);
+void sm510_op_sc(void);
+void sm510_op_tb(void);
+void sm510_op_tc(void);
+void sm510_op_tam(void);
+void sm510_op_tmi(void);
+void sm510_op_ta0(void);
+void sm510_op_tabl(void);
+void sm510_op_tis(void);
+void sm510_op_tal(void);
+void sm510_op_tf1(void);
+void sm510_op_tf4(void);
+void sm510_op_rm(void);
+void sm510_op_sm(void);
+void sm510_op_pre(void);
+void sm510_op_sme(void);
+void sm510_op_rme(void);
+void sm510_op_tmel(void);
+void sm510_op_skip(void);
+void sm510_op_cend(void);
+void sm510_op_idiv(void);
+void sm510_op_dr(void);
+void sm510_op_dta(void);
+void sm510_op_clklo(void);
+void sm510_op_clkhi(void);
+void sm510_op_illegal(void);
 
 #endif // _SM510_H_

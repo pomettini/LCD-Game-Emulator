@@ -1,0 +1,5 @@
+name=LCD Game Emulator
+author=LCD Game Emulator contributors
+description=Game & Watch hardware emulator for Playdate
+bundleID=com.pomettini.lcd-game-emulator
+imagePath=

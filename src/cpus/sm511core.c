@@ -14,17 +14,16 @@
     * $6036 and $6037 may be instruction timing? (16kHz and 8kHz), mnemonics unknown
 
 */
-#include <assert.h>
-
 #include "gw_type_defs.h"
 #include "sm510.h"
+#include "gw_machine.h"
 
 un8 *melody_rom;
 
 //-------------------------------------------------
 //  melody controller
 //-------------------------------------------------
-inline void sm511_clock_melody()
+inline void sm511_clock_melody(void)
 {
 	if (!melody_rom)
 		return;
@@ -95,7 +94,7 @@ bool sm511_init_melody(un8 *gw_melody)
 //-------------------------------------------------
 //  device_reset - device-specific reset
 //-------------------------------------------------
-void sm511_device_reset()
+void sm511_device_reset(void)
 {
 	sm510_device_reset();
 
@@ -104,7 +103,7 @@ void sm511_device_reset()
 }
 
 /********** 1 second timer *********/
-inline void sm511_div_timer_cb()
+inline void sm511_div_timer_cb(void)
 {
 	m_div = (m_div + 1) & 0x7fff;
 
@@ -127,11 +126,14 @@ inline void sm511_div_timer(int nb_inst)
 {
 	if (nb_inst > 0)
 		for (int toctoc=0; toctoc < m_clk_div*nb_inst; toctoc++ )
+		{
+			gw_machine_core_advance_clock();
 			sm511_div_timer_cb();
+		}
 }
 
 
-void sm511_execute_one()
+void sm511_execute_one(void)
 {
 	switch (m_op & 0xf0)
 	{
@@ -225,7 +227,7 @@ void sm511_execute_one()
 	m_sbm = (m_op == 0x02);
 }
 
-inline void sm511_get_opcode_param()
+inline void sm511_get_opcode_param(void)
 {
 	// LBL, PRE, TL, TML and prefix opcodes are 2 bytes
 	if ((m_op >= 0x5f && m_op <= 0x61) || (m_op & 0xf0) == 0x70 || (m_op & 0xfc) == 0x68)
@@ -241,7 +243,7 @@ inline void sm511_get_opcode_param()
 //-------------------------------------------------
 //  execute
 //-------------------------------------------------
-void sm511_execute_run()
+void sm511_execute_run(void)
 {
 	int reamining_icount = m_icount;
 
@@ -264,7 +266,7 @@ void sm511_execute_run()
 
 		// fetch next opcode
 		m_op = read_byte_program(m_pc);
-		
+
 		increment_pc();
 		sm511_get_opcode_param();
 
@@ -279,7 +281,7 @@ void sm511_execute_run()
 
 		// clock: spent time
 		sm511_div_timer(reamining_icount-m_icount);
-			
+
 		reamining_icount=m_icount;
 
 	}

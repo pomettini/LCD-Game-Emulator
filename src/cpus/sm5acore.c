@@ -11,7 +11,7 @@
 #include "sm510.h"
 #include "sm500.h"
 
-void sm5a_device_start()
+void sm5a_device_start(void)
 {
 	// common init (not everything is used though)
 	sm510_device_start();
@@ -53,7 +53,7 @@ void sm5a_device_start()
 //  device_reset - device-specific reset
 //-------------------------------------------------
 
-void sm5a_device_reset()
+void sm5a_device_reset(void)
 {
 	// common reset
 	sm510_device_reset();
@@ -70,7 +70,7 @@ void sm5a_device_reset()
 	m_r_out = 0;
 }
 
-void sm5a_execute_one()
+void sm5a_execute_one(void)
 {
 
 	switch (m_op & 0xf0)
@@ -269,7 +269,7 @@ void sm5a_execute_one()
 //-------------------------------------------------
 //  execute
 //-------------------------------------------------
-void sm5a_execute_run()
+void sm5a_execute_run(void)
 {
 	int reamining_icount = m_icount;
 

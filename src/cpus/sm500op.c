@@ -7,7 +7,7 @@
 #include "gw_type_defs.h"
 #include "sm510.h"
 #include "sm500.h"
-#include "gw_system.h"
+#include "gw_machine.h"
 
 // internal helpers
 
@@ -15,16 +15,16 @@
 //  Vector table reset & wakeup
 //-------------------------------------------------
 
-void sm500_reset_vector()  { do_branch(0, 0xf, 0); }
-void sm500_wakeup_vector()  { m_cb = 0; do_branch(0, 0, 0); }
-	
+void sm500_reset_vector(void)  { do_branch(0, 0xf, 0); }
+void sm500_wakeup_vector(void)  { m_cb = 0; do_branch(0, 0, 0); }
+
 void set_su(u8 su) { m_stack[0] = (m_stack[0] & ~0x3c0) | (su << 6 & 0x3c0); }
-u8 get_su() { return m_stack[0] >> 6 & 0xf; }
+u8 get_su(void) { return m_stack[0] >> 6 & 0xf; }
 
 // return 1 if SM5A or 0 if SM500
-int get_trs_field() { return trs_field; }
-	
-void shift_w()
+int get_trs_field(void) { return trs_field; }
+
+void shift_w(void)
 {
 	// shifts internal W' latches
 	for (int i = 0; i < (m_o_pins-1); i++)
@@ -44,7 +44,7 @@ void shift_w()
  depending on flag_force_refresh_display from ROM flags
 */
 
-void sm500_update_segments_state()
+void sm500_update_segments_state(void)
 {
 	// // Mirror the Outputs as segments states
 	for (int i = 0; i < m_o_pins; i++) {
@@ -55,7 +55,7 @@ void sm500_update_segments_state()
 
 }
 
-u8 get_digit()
+u8 get_digit(void)
 {
 	// default digit segments PLA
 	static const u8 lut_digits[0x20] =
@@ -71,34 +71,34 @@ u8 get_digit()
 
 // RAM address instructions
 
-void sm500_op_lb()
+void sm500_op_lb(void)
 {
 	// LB x: load BM/BL with 4-bit immediate value (partial)
 	m_bm = m_op & 3;
 	m_bl = (m_op >> 2 & 3) | ((m_op & 0xc) ? 8 : 0);
 }
 
-void sm500_op_incb()
+void sm500_op_incb(void)
 {
 	// INCB: increment BL, but overflow on 3rd bit!
 	m_bl = (m_bl + 1) & 0xf;
 	m_skip = (m_bl == 8);
 }
 
-void sm500_op_decb()
+void sm500_op_decb(void)
 {
 	// DECB: decrement BL, skip next on overflow
 	m_bl = (m_bl - 1) & 0xf;
 	m_skip = (m_bl == 0xf);
 }
 
-void sm500_op_sbm()
+void sm500_op_sbm(void)
 {
 	// SBM: set RAM address high bit
 	m_bm |= 4;
 }
 
-void sm500_op_rbm()
+void sm500_op_rbm(void)
 {
 	// RBM: reset RAM address high bit
 	m_bm &= ~4;
@@ -107,13 +107,13 @@ void sm500_op_rbm()
 
 // ROM address instructions
 
-void sm500_op_comcb()
+void sm500_op_comcb(void)
 {
 	// COMCB: complement CB
 	m_cb ^= 1;
 }
 
-void sm500_op_rtn0()
+void sm500_op_rtn0(void)
 {
 	if (flag_lcd_deflicker_level < 2 )
 		sm500_update_segments_state();
@@ -123,20 +123,20 @@ void sm500_op_rtn0()
 	m_rsub = false;
 }
 
-void sm500_op_rtn1()
+void sm500_op_rtn1(void)
 {
 	// RTN0(RTN): return from subroutine
 	sm500_op_rtn0();
 	m_skip = true;
 }
 
-void sm500_op_ssr()
+void sm500_op_ssr(void)
 {
 	// SSR x: set stack upper bits, also sets E flag for next opcode
 	set_su(m_op & 0xf);
 }
 
-void sm500_op_tr()
+void sm500_op_tr(void)
 {
 	// TR x: jump (long or short)
 	m_pc = (m_pc & ~0x3f) | (m_op & 0x3f);
@@ -144,7 +144,7 @@ void sm500_op_tr()
 		do_branch(m_cb, get_su(), m_pc & 0x3f);
 }
 
-void sm500_op_trs()
+void sm500_op_trs(void)
 {
 
 	// TRS x: call subroutine
@@ -165,7 +165,7 @@ void sm500_op_trs()
 
 
 // Data transfer instructions
-void sm500_op_exc()
+void sm500_op_exc(void)
 {
 	// EXC x: exchange ACC with RAM, xor BM with x
 	u8 a = m_acc;
@@ -174,21 +174,21 @@ void sm500_op_exc()
 	m_bm ^= (m_op & 3);
 }
 
-void sm500_op_exci()
+void sm500_op_exci(void)
 {
 	// EXCI x: EXC x, INCB
 	sm500_op_exc();
 	sm500_op_incb();
 }
 
-void sm500_op_excd()
+void sm500_op_excd(void)
 {
 	// EXCD x: EXC x, DECB
 	sm500_op_exc();
 	sm500_op_decb();
 }
 
-void sm500_op_atbp()
+void sm500_op_atbp(void)
 {
 	// ATBP: same as SM510, and set CN with ACC3
 	// ATBP: output ACC to BP(internal LCD backplate signal)
@@ -196,42 +196,42 @@ void sm500_op_atbp()
 	m_cn = m_acc >> 3 & 1;
 }
 
-void sm500_op_ptw()
+void sm500_op_ptw(void)
 {
 	// PTW: partial transfer W' to W
 	m_o[m_o_pins-1] = m_ox[m_o_pins-1];
 	m_o[m_o_pins-2] = m_ox[m_o_pins-2];
 }
 
-void sm500_op_tw()
+void sm500_op_tw(void)
 {
 	// TW: transfer W' to W
 	for (int i = 0; i < m_o_pins; i++)
 		m_o[i] = m_ox[i];
 }
 
-void sm500_op_pdtw()
+void sm500_op_pdtw(void)
 {
 	// PDTW: partial shift digit into W'
 	m_ox[m_o_pins-2] = m_ox[m_o_pins-1];
 	m_ox[m_o_pins-1] = get_digit();
 }
 
-void sm500_op_dtw()
+void sm500_op_dtw(void)
 {
 	// DTW: shift digit into W'
 	shift_w();
 	m_ox[m_o_pins-1] = get_digit();
 }
 
-void sm500_op_wr()
+void sm500_op_wr(void)
 {
 	// WR: shift ACC into W', reset last bit
 	shift_w();
 	m_ox[m_o_pins-1] = m_acc & 7;
 }
 
-void sm500_op_ws()
+void sm500_op_ws(void)
 {
 	// WR: shift ACC into W', set last bit
 	shift_w();
@@ -240,29 +240,29 @@ void sm500_op_ws()
 
 
 // I/O instructions
-void sm500_op_kta()
+void sm500_op_kta(void)
 {
-	
+
 	//copy all segments states
 	sm500_update_segments_state();
 
 	// KTA: input K to ACC
 	//m_acc = gw_readK(~m_r & 0xf) & 0xf;
-	m_acc = gw_readK(m_r_out & 0xf) & 0xf;
+	m_acc = gw_machine_core_read_k(m_r_out & 0xf) & 0xf;
 }
 
-void sm500_op_ats()
+void sm500_op_ats(void)
 {
 	// ATS: transfer ACC to S
 	m_s = m_acc;
 }
 
-void sm500_op_exksa()
+void sm500_op_exksa(void)
 {
 	// EXKSA: x
 }
 
-void sm500_op_exkfa()
+void sm500_op_exkfa(void)
 {
 	// EXKFA: x
 }
@@ -270,7 +270,7 @@ void sm500_op_exkfa()
 
 // Divider manipulation instructions
 
-void sm500_op_idiv()
+void sm500_op_idiv(void)
 {
 	// IDIV: reset divider low 9 bits
 	m_div &= 0x3f;
@@ -279,76 +279,76 @@ void sm500_op_idiv()
 
 // Bit manipulation instructions
 
-void sm500_op_rmf()
+void sm500_op_rmf(void)
 {
 	// RMF: reset m' flag, also clears ACC
 	m_mx = 0;
 	m_acc = 0;
 }
 
-void sm500_op_smf()
+void sm500_op_smf(void)
 {
 	// SMF: set m' flag
 	m_mx = 1;
 }
 
-void sm500_op_comcn()
+void sm500_op_comcn(void)
 {
 	// COMCN: complement CN flag
 	m_cn ^= 1;
 }
 
-void sm500_op_lax() { sm510_op_lax(); }
-void sm500_op_adx() { sm510_op_adx(); }
-void sm500_op_rm() { sm510_op_rm(); }
-void sm500_op_sm() { sm510_op_sm(); }
+void sm500_op_lax(void) { sm510_op_lax(); }
+void sm500_op_adx(void) { sm510_op_adx(); }
+void sm500_op_rm(void) { sm510_op_rm(); }
+void sm500_op_sm(void) { sm510_op_sm(); }
 //void sm500_op_exc() {  sm510_op_exc(); }
 //void sm500_op_exci() { sm510_op_exci(); }
-void sm500_op_lda() { sm510_op_lda(); }
+void sm500_op_lda(void) { sm510_op_lda(); }
 //void sm500_op_excd() { sm510_op_excd(); }
-void sm500_op_tmi() { sm510_op_tmi(); }
-void sm500_op_skip() { sm510_op_skip(); }
-void sm500_op_atr() { sm510_op_atr(); }
-void sm500_op_add() { sm510_op_add(); }
-void sm500_op_add11() { sm510_op_add11(); }
-void sm500_op_coma() { sm510_op_coma(); }
-void sm500_op_exbla() { sm510_op_exbla(); }
+void sm500_op_tmi(void) { sm510_op_tmi(); }
+void sm500_op_skip(void) { sm510_op_skip(); }
+void sm500_op_atr(void) { sm510_op_atr(); }
+void sm500_op_add(void) { sm510_op_add(); }
+void sm500_op_add11(void) { sm510_op_add11(); }
+void sm500_op_coma(void) { sm510_op_coma(); }
+void sm500_op_exbla(void) { sm510_op_exbla(); }
 
-void sm500_op_tal() {
+void sm500_op_tal(void) {
 	//copy all segments states
 	sm500_update_segments_state();
 
 	//sm510_op_tal();
 	// TAL: skip next if BA pin is set
 	m_skip = (m_read_ba() != 0);
-	} 
+	}
 
-void sm500_op_tb() { 
+void sm500_op_tb(void) {
 	//copy all segments states
 	sm500_update_segments_state();
 
 	//sm510_op_tb();
 	// TB: skip next if B(beta) pin is set
 	m_skip = (m_read_b() != 0);
-	} 
+	}
 
-void sm500_op_tc() { sm510_op_tc(); } 
-void sm500_op_tam() { sm510_op_tam(); } 
-void sm500_op_tis() { sm510_op_tis(); } 
+void sm500_op_tc(void) { sm510_op_tc(); }
+void sm500_op_tam(void) { sm510_op_tam(); }
+void sm500_op_tis(void) { sm510_op_tis(); }
 
-void sm500_op_ta0() { sm510_op_ta0(); } 
-void sm500_op_tabl() { sm510_op_tabl(); } 
+void sm500_op_ta0(void) { sm510_op_ta0(); }
+void sm500_op_tabl(void) { sm510_op_tabl(); }
 
-void sm500_op_lbl() { sm510_op_lbl(); } 
+void sm500_op_lbl(void) { sm510_op_lbl(); }
 
-void sm500_op_rc() { sm510_op_rc(); }
-void sm500_op_sc() { sm510_op_sc(); }
+void sm500_op_rc(void) { sm510_op_rc(); }
+void sm500_op_sc(void) { sm510_op_sc(); }
 
 // void sm500_op_kta() { sm510_op_kta(); }
 // void sm500_op_decb() { sm510_op_decb(); }
 // void sm500_op_rtn1() { sm510_op_rtn1(); }
 
-void sm500_op_cend() { sm510_op_cend(); }
-void sm500_op_dta() { sm510_op_dta(); }
-void sm500_op_illegal() { sm510_op_illegal(); }
-	
+void sm500_op_cend(void) { sm510_op_cend(); }
+void sm500_op_dta(void) { sm510_op_dta(); }
+void sm500_op_illegal(void) { sm510_op_illegal(); }
+

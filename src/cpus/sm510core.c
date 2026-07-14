@@ -9,16 +9,15 @@
 */
 #include "gw_type_defs.h"
 #include "sm510.h"
-#include "gw_romloader.h"
-#include "gw_system.h"
+#include "gw_machine.h"
 
 //-------------------------------------------------
 //  device_start - device-specific startup
 //-------------------------------------------------
-void sm510_device_start()
+void sm510_device_start(void)
 {
 	m_prgwidth  = 12;
-	m_datawidth = 7;	
+	m_datawidth = 7;
 	m_prgmask   = (1 << m_prgwidth) - 1;
 	m_datamask  = (1 << m_datawidth) - 1;
 
@@ -67,7 +66,7 @@ void sm510_device_start()
 //-------------------------------------------------
 //  device_reset - device-specific reset
 //-------------------------------------------------
-void sm510_device_reset()
+void sm510_device_reset(void)
 {
 	// ACL
 	m_skip = false;
@@ -89,7 +88,7 @@ void sm510_device_reset()
 //-------------------------------------------------
 //  buzzer controller
 //-------------------------------------------------
-inline void sm510_clock_melody()
+inline void sm510_clock_melody(void)
 {
 	u8 out = 0;
 
@@ -110,13 +109,14 @@ inline void sm510_clock_melody()
 	m_write_r(m_r_out);
 }
 
-void sm510_init_melody(){ }
+void sm510_init_melody(void)
+{ }
 
 //-------------------------------------------------
 //  wake up routine
 //-------------------------------------------------
 
-inline bool sm510_wake_me_up()
+inline bool sm510_wake_me_up(void)
 {
 	// in halt mode, wake up after 1S signal or K input
 	if (m_k_active || m_1s)
@@ -133,7 +133,7 @@ inline bool sm510_wake_me_up()
 }
 
 /********** 1 second timer *********/
-inline void sm510_div_timer_cb()
+inline void sm510_div_timer_cb(void)
 {
 	m_div = (m_div + 1) & 0x7fff;
 
@@ -152,12 +152,15 @@ inline void sm510_div_timer(int nb_inst)
 {
 	if (nb_inst > 0)
 		for ( int toctoc=0; toctoc < m_clk_div*nb_inst; toctoc++ )
+		{
+			gw_machine_core_advance_clock();
 			sm510_div_timer_cb();
+		}
 }
 
 /*************************************/
 
-inline void sm510_get_opcode_param()
+inline void sm510_get_opcode_param(void)
 {
 	// LBL, TL, TML opcodes are 2 bytes
 	if (m_op == 0x5f || (m_op & 0xf0) == 0x70)
@@ -165,12 +168,12 @@ inline void sm510_get_opcode_param()
 		m_icount--;
 
 		m_param = read_byte_program(m_pc);
-		
+
 		increment_pc();
 	}
 }
 
-void sm510_execute_one()
+void sm510_execute_one(void)
 {
 	switch (m_op & 0xf0)
 	{
@@ -252,14 +255,14 @@ void sm510_execute_one()
 //-------------------------------------------------
 //  execute
 //-------------------------------------------------
-void sm510_execute_run()
+void sm510_execute_run(void)
 {
 	int reamining_icount = m_icount;
 
 	while (m_icount > 0)
 	{
 		m_icount--;
-			
+
 		if (m_halt && !sm510_wake_me_up())
 		{
 			sm510_div_timer(reamining_icount);
@@ -275,7 +278,7 @@ void sm510_execute_run()
 
 		// fetch next opcode
 		m_op = read_byte_program(m_pc);
-		
+
 		increment_pc();
 		sm510_get_opcode_param();
 

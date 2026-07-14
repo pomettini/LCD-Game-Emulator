@@ -18,8 +18,7 @@
 
 #include "gw_type_defs.h"
 #include "sm510.h"
-#include "gw_romloader.h"
-#include "gw_system.h"
+#include "gw_machine.h"
 
 	int m_prgwidth;
 	int m_datawidth;
@@ -79,13 +78,13 @@
 	u8 m_cn;
 	u8 m_mx;
 	u8 trs_field;
-	 
+
 	u8 m_cb;
 	u8 m_s;
 	bool m_rsub;
-	
 
-void update_w_latch() { m_write_s(m_w); } // W is connected directly to S
+
+void update_w_latch(void) { m_write_s(m_w); } // W is connected directly to S
 
 //-------------------------------------------------
 // internal helpers to access memories
@@ -93,7 +92,7 @@ void update_w_latch() { m_write_s(m_w); } // W is connected directly to S
 //-------------------------------------------------
 //  Memory access SM5xx family
 //-------------------------------------------------
-u8 ram_r()
+u8 ram_r(void)
 {
 	int blh = (m_sbl) ? 8 : 0;						  // from SBL (optional)
 	int bmh = (m_sbm) ? (1 << (m_datawidth - 1)) : 0; // from SBM
@@ -121,14 +120,14 @@ void ram_w(u8 data)
 //  Stack push & pop access SM5xx family
 //-------------------------------------------------
 
-void pop_stack()
+void pop_stack(void)
 {
 	m_pc = m_stack[0] & m_prgmask;
 	for (int i = 0; i < m_stack_levels - 1; i++)
 		m_stack[i] = m_stack[i + 1];
 }
 
-void push_stack()
+void push_stack(void)
 {
 	for (int i = m_stack_levels - 1; i >= 1; i--)
 		m_stack[i] = m_stack[i - 1];
@@ -151,7 +150,7 @@ u8 bitmask(u16 param)
 /*****************************/
 un8 read_byte_program(un16 rom_address)
 {
-	return *(gw_program+rom_address);
+	return gw_machine_core_read_program(rom_address);
 }
 
 un8 readb(un8 ram_address)
@@ -166,19 +165,19 @@ void writeb(un8 ram_address,un8 ram_data)
 // External IO functions */
 /*************************/
 
-inline un8 m_read_k() 
+inline un8 m_read_k(void)
 {
-	return gw_readK(m_s_out);
+	return gw_machine_core_read_k(m_s_out);
 }
 
-inline un8 m_read_ba()
+inline un8 m_read_ba(void)
 {
-	return gw_readBA();
+	return gw_machine_core_read_ba();
 }
 
-inline un8 m_read_b()
+inline un8 m_read_b(void)
 {
-	return gw_readB();
+	return gw_machine_core_read_b();
 }
 
 inline void m_write_s(un8 data)
@@ -187,13 +186,13 @@ inline void m_write_s(un8 data)
 }
 inline void m_write_r(un8 data)
 {
-	gw_writeR(data);
+	gw_machine_core_write_buzzer(data);
 }
 
 //------------------------------------------------
 //  Program counter
 //-------------------------------------------------
-inline void increment_pc()
+inline void increment_pc(void)
 {
 	// PL(program counter low 6 bits) is a simple LFSR: newbit = (bit0==bit1)
 	// PU,PM(high bits) specify page, PL specifies steps within page

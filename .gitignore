@@ -59,4 +59,18 @@ CLAUDE.local.md
 .codex/
 AGENTS.local.md
 
+# Playdate build outputs
+/build/
+/lcd-game-emulator.pdx/
+/Source/pdex.bin
+
+# User-provided Game & Watch files (ROMs, artwork, and converted packages)
+/gameandwatch/
+
+# MAME reference-test outputs
+/cfg/
+/snap/
+/tests/inspect_gw_machine.c
+/tests/mame_ball_reference.lua
+
 .DS_Store

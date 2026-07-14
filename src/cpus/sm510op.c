@@ -6,7 +6,6 @@
 
 #include "gw_type_defs.h"
 #include "sm510.h"
-#include <assert.h>
 
 // internal helpers
 
@@ -14,8 +13,8 @@
 //  Vector table reset & wakeup
 //-------------------------------------------------
 
-void sm510_reset_vector() { do_branch(3, 7, 0); }
-void sm510_wakeup_vector() { do_branch(1, 0, 0); } // after halt
+void sm510_reset_vector(void) { do_branch(3, 7, 0); }
+void sm510_wakeup_vector(void) { do_branch(1, 0, 0); } // after halt
 
 
 
@@ -32,7 +31,7 @@ void sm510_wakeup_vector() { do_branch(1, 0, 0); } // after halt
  depending on flag_force_refresh_display from ROM flags
 */
 
-void sm510_update_segments_state()
+void sm510_update_segments_state(void)
 {
 	// Mirror the RAM memory as segments states
 	for (int address = 0; address < 128; address++)
@@ -43,31 +42,31 @@ void sm510_update_segments_state()
 
 // RAM address instructions
 
-void sm510_op_lb()
+void sm510_op_lb(void)
 {
 	// LB x: load BM/BL with 4-bit immediate value (partial)
 	m_bm = (m_bm & 4) | (m_op & 3);
 	m_bl = (m_op >> 2 & 3) | ((m_op & 0xc) ? 0xc : 0);
 }
 
-void sm510_op_lbl()
+void sm510_op_lbl(void)
 {
 	// LBL xy: load BM/BL with 8-bit immediate value
 	m_bl = m_param & 0xf;
 	m_bm = (m_param & m_datamask) >> 4;
 }
 
-void sm510_op_sbl()
+void sm510_op_sbl(void)
 {
 	// SBL: set BL high bit for next opcode - handled in execute_one()
 }
 
-void sm510_op_sbm()
+void sm510_op_sbm(void)
 {
 	// SBM: set BM high bit for next opcode - handled in execute_one()
 }
 
-void sm510_op_exbla()
+void sm510_op_exbla(void)
 {
 	// EXBLA: exchange BL with ACC
 	u8 a = m_acc;
@@ -75,14 +74,14 @@ void sm510_op_exbla()
 	m_bl = a;
 }
 
-void sm510_op_incb()
+void sm510_op_incb(void)
 {
 	// INCB: increment BL, skip next on overflow
 	m_bl = (m_bl + 1) & 0xf;
 	m_skip = (m_bl == 0);
 }
 
-void sm510_op_decb()
+void sm510_op_decb(void)
 {
 	// DECB: decrement BL, skip next on overflow
 	m_bl = (m_bl - 1) & 0xf;
@@ -91,13 +90,13 @@ void sm510_op_decb()
 
 // ROM address instructions
 
-void sm510_op_atpl()
+void sm510_op_atpl(void)
 {
 	// ATPL: load Pl(PC low bits) with ACC
 	m_pc = (m_prev_pc & ~0xf) | m_acc;
 }
 
-void sm510_op_rtn0()
+void sm510_op_rtn0(void)
 {
 	if (flag_lcd_deflicker_level < 2)
 		sm510_update_segments_state();
@@ -106,26 +105,26 @@ void sm510_op_rtn0()
 	pop_stack();
 }
 
-void sm510_op_rtn1()
+void sm510_op_rtn1(void)
 {
 	// RTN1: return from subroutine, skip next
 	sm510_op_rtn0();
 	m_skip = true;
 }
 
-void sm510_op_t()
+void sm510_op_t(void)
 {
 	// T xy: jump(transfer) within current page
 	m_pc = (m_pc & ~0x3f) | (m_op & 0x3f);
 }
 
-void sm510_op_tl()
+void sm510_op_tl(void)
 {
 	// TL xyz: long jump
 	do_branch(m_param >> 6 & 3, m_op & 0xf, m_param & 0x3f);
 }
 
-void sm510_op_tml()
+void sm510_op_tml(void)
 {
 
 	// TML xyz: long call
@@ -133,7 +132,7 @@ void sm510_op_tml()
 	do_branch(m_param >> 6 & 3, m_op & 3, m_param & 0x3f);
 }
 
-void sm510_op_tm()
+void sm510_op_tm(void)
 {
 
 	// TM x: indirect subroutine call, pointers(IDX) are on page 0
@@ -146,7 +145,7 @@ void sm510_op_tm()
 
 // Data transfer instructions
 
-void sm510_op_exc()
+void sm510_op_exc(void)
 {
 	// EXC x: exchange ACC with RAM, xor BM with x
 	u8 a = m_acc;
@@ -155,54 +154,54 @@ void sm510_op_exc()
 	m_bm ^= (m_op & 3);
 }
 
-void sm510_op_bdc()
+void sm510_op_bdc(void)
 {
 	// BDC: enable LCD bleeder current with C
 	m_bc = (m_c != 0);
 }
 
-void sm510_op_exci()
+void sm510_op_exci(void)
 {
 	// EXCI x: EXC x, INCB
 	sm510_op_exc();
 	sm510_op_incb();
 }
 
-void sm510_op_excd()
+void sm510_op_excd(void)
 {
 	// EXCD x: EXC x, DECB
 	sm510_op_exc();
 	sm510_op_decb();
 }
 
-void sm510_op_lda()
+void sm510_op_lda(void)
 {
 	// LDA x: load ACC with RAM, xor BM with x
 	m_acc = ram_r();
 	m_bm ^= (m_op & 3);
 }
 
-void sm510_op_lax()
+void sm510_op_lax(void)
 {
 	// LAX x: load ACC with immediate value, skip any next LAX
 	if ((m_op & ~0xf) != (m_prev_op & ~0xf))
 		m_acc = m_op & 0xf;
 }
 
-void sm510_op_ptw()
+void sm510_op_ptw(void)
 {
 	// PTW: output W latch
 	m_write_s(m_w);
 }
 
-void sm510_op_wr()
+void sm510_op_wr(void)
 {
 	// WR: shift 0 into W
 	m_w = m_w << 1 | 0;
 	update_w_latch();
 }
 
-void sm510_op_ws()
+void sm510_op_ws(void)
 {
 	// WS: shift 1 into W
 	m_w = m_w << 1 | 1;
@@ -211,7 +210,7 @@ void sm510_op_ws()
 
 // I/O instructions
 
-void sm510_op_kta()
+void sm510_op_kta(void)
 {
 
 	sm510_update_segments_state();
@@ -220,31 +219,31 @@ void sm510_op_kta()
 	m_acc = m_read_k() & 0xf;
 }
 
-void sm510_op_atbp()
+void sm510_op_atbp(void)
 {
 	// ATBP: output ACC to BP(internal LCD backplate signal)
 	m_bp = m_acc & 1;
 }
 
-void sm510_op_atx()
+void sm510_op_atx(void)
 {
 	// ATX: output ACC to X
 	m_x = m_acc;
 }
 
-void sm510_op_atl()
+void sm510_op_atl(void)
 {
 	// ATL: output ACC to L
 	m_l = m_acc;
 }
 
-void sm510_op_atfc()
+void sm510_op_atfc(void)
 {
 	// ATFC: output ACC to Y
 	m_y = m_acc;
 }
 
-void sm510_op_atr()
+void sm510_op_atr(void)
 {
 	// ATR: output ACC to R
 	m_r = m_acc;
@@ -253,13 +252,13 @@ void sm510_op_atr()
 
 // Arithmetic instructions
 
-void sm510_op_add()
+void sm510_op_add(void)
 {
 	// ADD: add RAM to ACC
 	m_acc = (m_acc + ram_r()) & 0xf;
 }
 
-void sm510_op_add11()
+void sm510_op_add11(void)
 {
 	// ADD11: add RAM and carry to ACC and carry, skip next on carry
 	m_acc += ram_r() + m_c;
@@ -268,7 +267,7 @@ void sm510_op_add11()
 	m_acc &= 0xf;
 }
 
-void sm510_op_adx()
+void sm510_op_adx(void)
 {
 	// ADX x: add immediate value to ACC, skip next on carry except if x = 10
 	m_acc += (m_op & 0xf);
@@ -276,13 +275,13 @@ void sm510_op_adx()
 	m_acc &= 0xf;
 }
 
-void sm510_op_coma()
+void sm510_op_coma(void)
 {
 	// COMA: complement ACC
 	m_acc ^= 0xf;
 }
 
-void sm510_op_rot()
+void sm510_op_rot(void)
 {
 	// ROT: rotate ACC right through carry
 	u8 c = m_acc & 1;
@@ -290,13 +289,13 @@ void sm510_op_rot()
 	m_c = c;
 }
 
-void sm510_op_rc()
+void sm510_op_rc(void)
 {
 	// RC: reset carry
 	m_c = 0;
 }
 
-void sm510_op_sc()
+void sm510_op_sc(void)
 {
 	// SC: set carry
 	m_c = 1;
@@ -304,7 +303,7 @@ void sm510_op_sc()
 
 // Test instructions
 
-void sm510_op_tb()
+void sm510_op_tb(void)
 {
 	sm510_update_segments_state();
 
@@ -312,44 +311,44 @@ void sm510_op_tb()
 	m_skip = (m_read_b() != 0);
 }
 
-void sm510_op_tc()
+void sm510_op_tc(void)
 {
 	// TC: skip next if no carry
 	m_skip = !m_c;
 }
 
-void sm510_op_tam()
+void sm510_op_tam(void)
 {
 	// TAM: skip next if ACC equals RAM
 	m_skip = (m_acc == ram_r());
 }
 
-void sm510_op_tmi()
+void sm510_op_tmi(void)
 {
 	// TMI x: skip next if RAM bit is set
 	m_skip = ((ram_r() & bitmask(m_op)) != 0);
 }
 
-void sm510_op_ta0()
+void sm510_op_ta0(void)
 {
 	// TA0: skip next if ACC is clear
 	m_skip = !m_acc;
 }
 
-void sm510_op_tabl()
+void sm510_op_tabl(void)
 {
 	// TABL: skip next if ACC equals BL
 	m_skip = (m_acc == m_bl);
 }
 
-void sm510_op_tis()
+void sm510_op_tis(void)
 {
 	// TIS: skip next if 1S(gamma flag) is clear, reset it after
 	m_skip = !m_1s;
 	m_1s = false;
 }
 
-void sm510_op_tal()
+void sm510_op_tal(void)
 {
 	sm510_update_segments_state();
 
@@ -357,13 +356,13 @@ void sm510_op_tal()
 	m_skip = (m_read_ba() != 0);
 }
 
-void sm510_op_tf1()
+void sm510_op_tf1(void)
 {
 	// TF1: skip next if divider F1(d14) is set
 	m_skip = ((m_div & 0x4000) != 0);
 }
 
-void sm510_op_tf4()
+void sm510_op_tf4(void)
 {
 	// TF4: skip next if divider F4(d11) is set
 	m_skip = ((m_div & 0x0800) != 0);
@@ -371,13 +370,13 @@ void sm510_op_tf4()
 
 // Bit manipulation instructions
 
-void sm510_op_rm()
+void sm510_op_rm(void)
 {
 	// RM x: reset RAM bit
 	ram_w(ram_r() & ~bitmask(m_op));
 }
 
-void sm510_op_sm()
+void sm510_op_sm(void)
 {
 	// SM x: set RAM bit
 	ram_w(ram_r() | bitmask(m_op));
@@ -385,27 +384,27 @@ void sm510_op_sm()
 
 // Melody control instructions
 
-void sm510_op_pre()
+void sm510_op_pre(void)
 {
 	// PRE x: melody ROM pointer preset
 	m_melody_address = m_param;
 	m_melody_step_count = 0;
 }
 
-void sm510_op_sme()
+void sm510_op_sme(void)
 {
 
 	// SME: set melody enable
 	m_melody_rd |= 1;
 }
 
-void sm510_op_rme()
+void sm510_op_rme(void)
 {
 	// RME: reset melody enable
 	m_melody_rd &= ~1;
 }
 
-void sm510_op_tmel()
+void sm510_op_tmel(void)
 {
 	// TMEL: skip next if melody stop flag is set, reset it
 	m_skip = ((m_melody_rd & 2) != 0);
@@ -414,49 +413,51 @@ void sm510_op_tmel()
 
 // Special instructions
 
-void sm510_op_skip()
+void sm510_op_skip(void)
 {
 	// SKIP: no operation
 }
 
-void sm510_op_cend()
+void sm510_op_cend(void)
 {
 	// CEND: stop clock (halt the cpu and go into low-power mode)
 	m_halt = true;
 }
 
-void sm510_op_idiv()
+void sm510_op_idiv(void)
 {
 	// IDIV: reset divider
 	m_div = 0;
 }
 
-void sm510_op_dr()
+void sm510_op_dr(void)
 {
 	// DR: reset divider low 8 bits
 	m_div &= 0x7f;
 }
 
-void sm510_op_dta()
+void sm510_op_dta(void)
 {
 	// DTA: transfer divider low 4 bits to ACC
 	m_acc = m_div >> 11 & 0xf;
 }
 
-void sm510_op_clklo()
+void sm510_op_clklo(void)
 {
 	// CLKLO*: select 8kHz instruction clock (*unknown mnemonic)
 	m_clk_div = 4;
 }
 
-void sm510_op_clkhi()
+void sm510_op_clkhi(void)
 {
 	// CLKHI*: select 16kHz instruction clock (*unknown mnemonic)
 	m_clk_div = 2;
 }
 
-void sm510_op_illegal()
+void sm510_op_illegal(void)
 {
-	printf("unknown opcode $%02X at $%04X\n", m_op, m_prev_pc);
-	assert(0);
+	/* A bad opcode must not pull assert/stdio syscalls into the device build or
+	 * crash the application. Stop this CPU; the frontend can remain responsive. */
+	m_halt = true;
+	m_skip = false;
 }
