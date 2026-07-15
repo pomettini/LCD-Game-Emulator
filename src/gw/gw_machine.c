@@ -47,7 +47,7 @@ int gw_machine_init(GWMachine *machine, const GWPackage *package,
     machine->program_size = package->program.size;
     machine->keyboard = package->payload + package->keyboard.offset;
 
-    /* Ball is the only execution-enabled database entry in this milestone. */
+    /* The first execution-enabled family uses the shared SM5A core. */
     if (memcmp(package->cpu_name, "SM5A___", 8) != 0)
         return 0;
 
@@ -161,9 +161,9 @@ uint8_t gw_machine_core_read_program(uint16_t address)
         return 0;
 
     /*
-     * SM5A maps 0x700-0x73f across the whole 0x700-0x7ff range.  The Ball
-     * dump stores only the physical 0x740 bytes, so emulate the address-line
-     * mirror before applying the package bounds check.
+     * SM5A maps 0x700-0x73f across the whole 0x700-0x7ff range.  Packages
+     * store only the physical 0x740 bytes, so emulate the address-line mirror
+     * before applying the package bounds check.
      */
     address &= 0x7ff;
     if (address >= 0x740)

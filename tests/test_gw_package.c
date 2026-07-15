@@ -10,7 +10,9 @@
 static void test_database(void)
 {
     const GWGameInfo *ball;
+    const GWGameInfo *flagman;
     const char ball_signature[8] = {'g','n','w','_','b','a','l','l'};
+    const char flagman_signature[8] = {'_','f','l','a','g','m','a','n'};
     const char ball_cpu[8] = {'S','M','5','A','_','_','_','\0'};
 
     assert(gw_game_db_count() == 25);
@@ -18,7 +20,15 @@ static void test_database(void)
     assert(ball != NULL);
     assert(strcmp(ball->machine_id, "gnw_ball") == 0);
     assert(ball->enabled == 1);
+    assert(ball->input_profile == GW_INPUT_PROFILE_BALL);
     assert(ball->program_crc32 == UINT32_C(0xac94e6e4));
+
+    flagman = gw_game_db_find(flagman_signature, ball_cpu);
+    assert(flagman != NULL);
+    assert(strcmp(flagman->machine_id, "gnw_flagman") == 0);
+    assert(flagman->enabled == 1);
+    assert(flagman->input_profile == GW_INPUT_PROFILE_FLAGMAN);
+    assert(flagman->program_crc32 == UINT32_C(0xcc7a99e4));
 }
 
 static void test_rejections(void)

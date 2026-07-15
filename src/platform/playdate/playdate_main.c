@@ -98,16 +98,27 @@ static void return_to_picker_menu(void *userdata)
 static uint32_t read_inputs(void *userdata)
 {
     PDButtons current;
+    GWInputProfile profile = GW_INPUT_PROFILE_UNSUPPORTED;
     uint32_t inputs = 0;
     (void)userdata;
 
     pd->system->getButtonState(&current, NULL, NULL);
-    if (current & kButtonLeft) inputs |= GW_INPUT_LEFT;
-    if (current & kButtonRight) inputs |= GW_INPUT_RIGHT;
-    if (current & kButtonUp) inputs |= GW_INPUT_UP;
-    if (current & kButtonDown) inputs |= GW_INPUT_DOWN;
-    if (current & kButtonA) inputs |= GW_INPUT_A | GW_INPUT_GAME;
-    if (current & kButtonB) inputs |= GW_INPUT_B | GW_INPUT_TIME;
+    if (loaded_package.game != NULL)
+        profile = loaded_package.game->input_profile;
+
+    if (profile == GW_INPUT_PROFILE_BALL) {
+        if (current & kButtonLeft) inputs |= GW_INPUT_LEFT;
+        if (current & kButtonRight) inputs |= GW_INPUT_RIGHT;
+        if (current & kButtonA)
+            inputs |= GW_INPUT_RIGHT | GW_INPUT_A | GW_INPUT_GAME;
+        if (current & kButtonB)
+            inputs |= GW_INPUT_LEFT | GW_INPUT_B | GW_INPUT_TIME;
+    } else if (profile == GW_INPUT_PROFILE_FLAGMAN) {
+        if (current & kButtonUp) inputs |= GW_INPUT_UP;
+        if (current & kButtonDown) inputs |= GW_INPUT_DOWN;
+        if (current & kButtonA) inputs |= GW_INPUT_A | GW_INPUT_GAME;
+        if (current & kButtonB) inputs |= GW_INPUT_B | GW_INPUT_TIME;
+    }
     return inputs;
 }
 
@@ -390,6 +401,11 @@ static void draw_reset_confirmation(void)
 
 static void draw_controls(void)
 {
+    const GWGameInfo *game = loaded_package.game;
+    const char *line_1 = "No control profile is available.";
+    const char *line_2 = "";
+    const char *line_3 = "";
+    char title[64];
     PDButtons pushed;
     pd->system->getButtonState(NULL, &pushed, NULL);
     if (pushed & kButtonB) {
@@ -398,15 +414,23 @@ static void draw_controls(void)
         resync_scheduler();
         return;
     }
+    if (game != NULL && game->input_profile == GW_INPUT_PROFILE_BALL) {
+        line_1 = "Left / Right: move";
+        line_2 = "A: right / Game A";
+        line_3 = "B: left / Game B";
+    } else if (game != NULL &&
+               game->input_profile == GW_INPUT_PROFILE_FLAGMAN) {
+        line_1 = "Up / Down: left flags";
+        line_2 = "A / B: right flags";
+        line_3 = "A: Game A    B: Game B";
+    }
+    snprintf(title, sizeof(title), "%s controls",
+             game != NULL ? game->title : "Game");
     pd->graphics->clear(kColorWhite);
-    pd->graphics->drawText("Ball controls", sizeof("Ball controls") - 1,
-                           kASCIIEncoding, 16, 45);
-    pd->graphics->drawText("Left / Right: move", sizeof("Left / Right: move") - 1,
-                           kASCIIEncoding, 16, 82);
-    pd->graphics->drawText("A: right / Game A", sizeof("A: right / Game A") - 1,
-                           kASCIIEncoding, 16, 108);
-    pd->graphics->drawText("B: left / Game B", sizeof("B: left / Game B") - 1,
-                           kASCIIEncoding, 16, 134);
+    pd->graphics->drawText(title, strlen(title), kASCIIEncoding, 16, 45);
+    pd->graphics->drawText(line_1, strlen(line_1), kASCIIEncoding, 16, 82);
+    pd->graphics->drawText(line_2, strlen(line_2), kASCIIEncoding, 16, 108);
+    pd->graphics->drawText(line_3, strlen(line_3), kASCIIEncoding, 16, 134);
     pd->graphics->drawText("B: close this screen", sizeof("B: close this screen") - 1,
                            kASCIIEncoding, 16, 178);
 }

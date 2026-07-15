@@ -8,13 +8,19 @@ typedef enum GWDisplayConfig {
     GW_DISPLAY_SINGLE_320X240 = 1
 } GWDisplayConfig;
 
+typedef enum GWInputProfile {
+    GW_INPUT_PROFILE_UNSUPPORTED = 0,
+    GW_INPUT_PROFILE_BALL,
+    GW_INPUT_PROFILE_FLAGMAN
+} GWInputProfile;
+
 typedef struct GWGameInfo {
     const char *title;
     const char *expected_filename;
     const char *machine_id;
     char package_signature[9];
     char cpu_name[9];
-    const char *input_config;
+    GWInputProfile input_profile;
     GWDisplayConfig display_config;
     uint32_t program_size;
     uint32_t program_crc32;

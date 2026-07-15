@@ -16,10 +16,10 @@ an on-device explanation.
 2. Clone or download LCD-Game-Shrinker from its upstream project.
 3. Follow that project's dependency setup and place the ROM archive and its
    matching artwork archive in the input locations documented there.
-4. Run `shrink_it.py` for the MAME machine identifier. For the first milestone,
-   use `gnw_ball` and leave `flag_background_jpeg = False`; the current Playdate
-   renderer accepts the resulting RGB565 background but not the optional
-   appended JPEG form yet.
+4. Run `shrink_it.py` for the MAME machine identifier. The current enabled
+   identifiers are `gnw_ball` and `gnw_flagman`. Leave
+   `flag_background_jpeg = False`; the current Playdate renderer accepts the
+   resulting RGB565 background but not the optional appended JPEG form yet.
 5. Copy the generated `.gw` file to the Playdate data disk at:
 
    ```text
@@ -30,10 +30,11 @@ The ROM picker creates that directory if it does not exist. Filenames may be
 changed, but package identity is determined from the internal machine signature,
 CPU type, program size, and program CRC32—not from the displayed filename.
 
-Only Ball is execution-enabled at the current proof-of-concept stage. The other
-24 requested titles are present in the strict whitelist database but return a
-safe “not enabled yet” error until their individual display and input behavior
-is implemented and tested.
+Ball and Flagman are execution-enabled at the current proof-of-concept stage;
+Ball has been validated on physical hardware and Flagman has a loader-validated
+package pending its device test. The other 23 requested titles are present in
+the strict whitelist database but return a safe “not enabled yet” error until
+their individual display and input behavior is implemented and tested.
 
 ## Binary layout
 

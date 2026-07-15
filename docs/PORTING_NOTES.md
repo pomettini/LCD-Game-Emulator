@@ -174,7 +174,7 @@ Assertions on user-controlled data become recoverable on-device error screens.
 7. **Clock and lifecycle:** initial system-time injection, explicit resync action,
    reset confirmation, picker return, and bounded pause/resume behavior.
 8. **Expansion:** add Silver/Gold, Wide Screen, then New Wide Screen database
-   entries only after Ball is confirmed on a physical Rev B. Preserve Rev A
+   entries only after Ball is confirmed on physical hardware. Preserve Rev A
    memory and performance constraints throughout.
 
 Compilation is only a static milestone. Playability, rendering, sound, speed,
@@ -183,15 +183,22 @@ and underrun behavior remain unverified until the required physical-device test.
 ## Current proof-of-concept status
 
 The repository now builds a device-only C application, integrates the pinned
-ROM picker, validates the LZ4/raw package structure and Ball program checksum,
-executes Ball's SM5A core from a monotonic 32,768 Hz cycle accumulator, renders
-RGB565 artwork and live segments in stable 1-bit output, maps Ball controls,
-streams cycle-synchronous buzzer samples through a preallocated audio ring, and
-provides clock sync/reset/controls/picker menu actions. Optional debug metrics
-are enabled with `make device DEBUG_METRICS=1`.
+ROM picker, validates the LZ4/raw package structure and per-game program
+checksums, executes the SM5A core from a monotonic 32,768 Hz cycle accumulator,
+renders RGB565 artwork and live segments in stable 1-bit output, maps
+game-specific controls, streams cycle-synchronous buzzer samples through a
+preallocated audio ring, and provides clock sync/reset/controls/picker menu
+actions. Optional debug metrics are enabled with
+`make device DEBUG_METRICS=1`.
 
-This remains unverified on hardware. JPEG-background packages are parsed but
-rejected by the current renderer, and only Ball is execution-enabled. Pause,
-lock, and menu overlays discard host-time backlog and restart the audio queue;
-they do not emulate all missed real time. A manual clock synchronization action
-is available when that distinction matters.
+Ball has been confirmed playable on a physical Playdate. Three sampled
+five-second debug windows reported no sustained timing deficit (0, -1, and 0
+oscillator cycles) and the four startup audio underruns did not increase.
+Flagman is the next execution-enabled SM5A title. Its ROM-free host execution
+test passes, and its generated package passes the strict loader validation;
+physical-device validation remains pending.
+
+JPEG-background packages are parsed but rejected by the current renderer.
+Pause, lock, and menu overlays discard host-time backlog and restart the audio
+queue; they do not emulate all missed real time. A manual clock synchronization
+action is available when that distinction matters.

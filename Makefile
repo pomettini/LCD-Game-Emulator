@@ -50,6 +50,13 @@ test:
 		tests/test_gw_package.c src/gw/gw_package.c src/gw/gw_game_db.c \
 		-o build/test_gw_package
 	build/test_gw_package
+	$(CC_FOR_BUILD) -std=gnu99 -fgnu89-inline -Wall -Wextra -Werror \
+		-Isrc/gw -Isrc/gw_sys -Isrc/cpus \
+		tests/test_gw_machine.c src/gw/gw_machine.c src/gw/gw_game_db.c \
+		src/cpus/sm510base.c src/cpus/sm510core.c src/cpus/sm510op.c \
+		src/cpus/sm500core.c src/cpus/sm500op.c src/cpus/sm5acore.c \
+		-o build/test_gw_machine
+	build/test_gw_machine
 
 install: device
 	@test -d "$(PLAYDATE_GAMES)" || (echo "Playdate volume not mounted at $(PLAYDATE_GAMES)" && exit 1)
